@@ -1,0 +1,6 @@
+[submodule "galaxy_controller"]
+	path = galaxy_controller
+	url = git@github.com:machearn/galaxy_controller.git
+[submodule "galaxy_service"]
+	path = galaxy_service
+	url = git@github.com:machearn/galaxy_service.git
