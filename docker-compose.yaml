@@ -1,0 +1,47 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:12-alpine
+    environment:
+      - POSTGRES_DB=galaxy_club
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d galaxy_club"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+  service:
+    build:
+      context: ./galaxy_service
+      dockerfile: Dockerfile
+    # ports:
+    #   - "50051:50051"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DB_SOURCE=postgres://root:password@db:5432/galaxy_club?sslmode=disable
+      - REDIS_ADDRESS=redis:6379
+  controller:
+    build:
+      context: ./galaxy_controller
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      service:
+        condition: service_started
+    environment:
+      - GRPC_SERVER_ADDRESS=service:50051
